@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS App | BMI, Todo List & Theme Toggle</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* ตัวแปรสีรองรับการสลับ Theme */
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --text-sub: #cbd5e1;
+            --border-color: #334155;
+            --input-bg: #0f172a;
+            --accent-color: #38bdf8;
+        }
+
+        /* CSS สำหรับ Light Mode */
+        [data-theme="light"] {
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-color: #0f172a;
+            --text-sub: #475569;
+            --border-color: #cbd5e1;
+            --input-bg: #f8fafc;
+            --accent-color: #0284c7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Kanit', sans-serif;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .header-bar {
+            max-width: 900px;
+            margin: 0 auto 20px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .theme-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: var(--accent-color);
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(56, 189, 248, 0.2);
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--text-sub);
+            font-size: 0.9rem;
+        }
+
+        input[type="number"], 
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-color);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(90deg, #0284c7, #0ea5e9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        /* BMI Result */
+        .result-box {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 8px;
+            background: var(--input-bg);
+            text-align: center;
+            display: none;
+        }
+
+        .bmi-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .bmi-status {
+            font-size: 1.1rem;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+
+        /* Todo List */
+        .todo-input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .todo-input-group input {
+            flex-grow: 1;
+        }
+
+        .todo-input-group .btn {
+            width: auto;
+            margin-top: 0;
+            padding: 0 20px;
+            white-space: nowrap;
+        }
+
+        .todo-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .todo-item {
+            background: var(--input-bg);
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            animation: fadeIn 0.3s ease-in-out;
+            cursor: pointer;
+        }
+
+        .todo-item.completed span {
+            text-decoration: line-through;
+            color: #94a3b8;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header & Theme Toggle -->
+    <div class="header-bar">
+        <h1 style="font-size: 1.5rem; color: var(--accent-color);">🛠️ Utility Dashboard</h1>
+        <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">☀️ Switch Light Mode</button>
+    </div>
+
+    <div class="container">
+        <!-- Option A: BMI Calculator -->
+        <div class="card">
+            <h2>⚖️ คำนวณค่า BMI (Option A)</h2>
+            <form id="bmiForm">
+                <div class="form-group">
+                    <label for="weight">น้ำหนัก (กก.):</label>
+                    <input type="number" id="weight" step="0.1" placeholder="เช่น 65" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="height">ส่วนสูง (ซม.):</label>
+                    <input type="number" id="height" step="0.1" placeholder="เช่น 170" required>
+                </div>
+
+                <button type="button" class="btn" onclick="calculateBMI()">คำนวณ BMI</button>
+            </form>
+
+            <div id="bmiResult" class="result-box">
+                <div>ค่า BMI ของคุณคือ</div>
+                <div id="bmiScore" class="bmi-value">0.0</div>
+                <div id="bmiCategory" class="bmi-status">-</div>
+            </div>
+        </div>
+
+        <!-- Option B: Todo List -->
+        <div class="card">
+            <h2>📝 รายการสิ่งที่ต้องทำ (Option B)</h2>
+            
+            <div class="todo-input-group">
+                <input type="text" id="todoInput" placeholder="พิมพ์รายการใหม่ที่นี่...">
+                <button class="btn" onclick="addTodo()">เพิ่ม</button>
+            </div>
+
+            <ul id="todoList" class="todo-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        /* --- 1. Toggle Theme (Dark / Light) --- */
+        function toggleTheme() {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const themeBtn = document.getElementById('themeBtn');
+            
+            if (currentTheme === 'light') {
+                document.body.removeAttribute('data-theme');
+                themeBtn.innerText = '☀️ Switch Light Mode';
+            } else {
+                document.body.setAttribute('data-theme', 'light');
+                themeBtn.innerText = '🌙 Switch Dark Mode';
+            }
+        }
+
+        /* --- 2. Calculate BMI --- */
+        function calculateBMI() {
+            const weight = parseFloat(document.getElementById('weight').value);
+            const heightCm = parseFloat(document.getElementById('height').value);
+            const resultBox = document.getElementById('bmiResult');
+            const bmiScoreEl = document.getElementById('bmiScore');
+            const bmiCategoryEl = document.getElementById('bmiCategory');
+
+            if (!weight || !heightCm || weight <= 0 || heightCm <= 0) {
+                alert('กรุณากรอกน้ำหนักและส่วนสูงให้ถูกต้องครับ');
+                return;
+            }
+
+            const heightM = heightCm / 100;
+            const bmi = weight / (heightM * heightM);
+            const bmiFixed = bmi.toFixed(1);
+
+            let category = '';
+            let color = '';
+
+            if (bmi < 18.5) {
+                category = 'ผอมเกินไป (Underweight)';
+                color = '#f59e0b';
+            } else if (bmi >= 18.5 && bmi < 23) {
+                category = 'น้ำหนักปกติ / สมส่วน (Normal)';
+                color = '#10b981';
+            } else if (bmi >= 23 && bmi < 25) {
+                category = 'น้ำหนักเกิน (Overweight)';
+                color = '#f59e0b';
+            } else if (bmi >= 25 && bmi < 30) {
+                category = 'อ้วน / โรคอ้วนระดับ 1 (Obese)';
+                color = '#ef4444';
+            } else {
+                category = 'อ้วนมาก / โรคอ้วนระดับ 2 (Severe Obese)';
+                color = '#b91c1c';
+            }
+
+            bmiScoreEl.innerText = bmiFixed;
+            bmiCategoryEl.innerText = category;
+            bmiCategoryEl.style.color = color;
+            resultBox.style.display = 'block';
+        }
+
+        /* --- 3. Todo List with LocalStorage & Toggle Complete --- */
+        let todos = JSON.parse(localStorage.getItem('user_todos')) || [];
+
+        function renderTodos() {
+            const ul = document.getElementById('todoList');
+            ul.innerHTML = '';
+
+            todos.forEach((todo, index) => {
+                const li = document.createElement('li');
+                li.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+                
+                // กดเพื่อทำเครื่องหมายว่าเสร็จ/ยังไม่เสร็จ
+                li.onclick = function(e) {
+                    if (e.target.tagName !== 'BUTTON') {
+                        todos[index].completed = !todos[index].completed;
+                        saveAndRender();
+                    }
+                };
+
+                const span = document.createElement('span');
+                span.innerText = todo.text;
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn-delete';
+                deleteBtn.innerText = 'ลบ';
+                deleteBtn.onclick = function() {
+                    todos.splice(index, 1);
+                    saveAndRender();
+                };
+
+                li.appendChild(span);
+                li.appendChild(deleteBtn);
+                ul.appendChild(li);
+            });
+        }
+
+        function addTodo() {
+            const input = document.getElementById('todoInput');
+            const text = input.value.trim();
+
+            if (text === '') {
+                alert('กรุณากรอกข้อความก่อนกดเพิ่มครับ');
+                return;
+            }
+
+            todos.push({ text: text, completed: false });
+            saveAndRender();
+
+            input.value = '';
+            input.focus();
+        }
+
+        function saveAndRender() {
+            localStorage.setItem('user_todos', JSON.stringify(todos));
+            renderTodos();
+        }
+
+        document.getElementById('todoInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addTodo();
+            }
+        });
+
+        // โหลดข้อมูล Todo ครั้งแรกเมื่อเปิดหน้าเว็บ
+        renderTodos();
+    </script>
+
+</body>
+</html>
